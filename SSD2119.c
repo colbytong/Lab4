@@ -34,10 +34,8 @@
 //  XP->XN = 651
 
 #include <stdint.h>
-#include <header_Lab4.h>
 #include <tm4c123gh6pm.h>
 #include "SSD2119.h"
-
   
 // 4 bit Color 	 red,green,blue to 16 bit color 
 // bits 15-11 5 bit red
@@ -62,7 +60,6 @@ unsigned short const Color4[16] = {
  ((0xFF>>3)<<11) | ((0xFF>>2)<<5) | (0xFF>>3)   //15 – bright white           (#FFFFFF) 	111111 	63
 };
 
-
 unsigned short cursorX;
 unsigned short cursorY;
 unsigned short textColor;
@@ -75,8 +72,6 @@ typedef struct {
 // dimensions of the LCD in pixels
 #define LCD_HEIGHT 240
 #define LCD_WIDTH 320     
-
-
 
 // converts 24bit RGB color to display color
 //#define CONVERT24BPP(c) ( (((c) & 0x00f80000) >> 8) | (((c) & 0x0000fc00) >> 5) | (((c) & 0x000000f8) >> 3) )
@@ -149,56 +144,28 @@ typedef struct {
 #define LCD_CS_PIN       (*((volatile unsigned long *)0x40004200))     // PA7
 #define LCD_CTRL         (*((volatile unsigned long *)0x400043C0))     // PA4-7
 #define LCD_DATA         (*((volatile unsigned long *)0x400053FC))     // PB0-7
-// ************** ADC_Init *********************************
-// - Initializes the ADC to use a specficed channel on SS3
-// *********************************************************
-// Input: channel number
-// Output: none
-// *********************************************************
-void ADC_Init(void);
 
-// ************** ADC_Read *********************************
-// - Takes a sample from the ADC
-// *********************************************************
-// Input: none
-// Output: sampled value from the ADC
-// *********************************************************
-unsigned long ADC_Read(void);
-
-// ************** ADC_SetChannel ***************************
-// - Configures the ADC to use a specific channel
-// *********************************************************
-// Input: none
-// Output: none
-// *********************************************************
-void ADC_SetChannel(unsigned char channelNum);
-
-/* *************************************************************
-TODO: Please fill the information based on the pseudocode
-******************************************************************/
-
-// ************** TODO: LCD_GPIOInit ****************************
+// ************** LCD_GPIOInit ****************************
 // - Initializes Port B to be used as the data bus and
 //   Port A 4-7 as controller signals
 // ********************************************************
 void LCD_GPIOInit(void){
     unsigned long wait = 0;
     
-    RCGC2_REGISTER |= 0x2;                 // activate port B
+    SYSCTL_RCGC2_R |= SYSCTL_RCGC2_GPIOB;  // activate port B
     wait++;                                // wait for port activation
     wait++;                                // wait for port activation
-    GPIODIR_PORTB |= 0xFF;                 // make PB0-7 outputs
-    GPIOAFSEL_PORTB &= ~0xFF;              // disable alternate functions 
-    GPIODEN_PORTB |= 0xFF;                 // enable digital I/O on PB0-7
+    GPIO_PORTB_DIR_R |= 0xFF;              // make PB0-7 outputs
+    GPIO_PORTB_AFSEL_R &= ~(0xFF);         // disable alternate functions 
+    GPIO_PORTB_DEN_R |= 0xFF;              // enable digital I/O on PB0-7
     
     // activate control pins
-    RCGC2_REGISTER |= 0x1;                // activate port A
+    SYSCTL_RCGC2_R |= SYSCTL_RCGC2_GPIOA; // activate port A
     wait++;                               // wait for port activation
     wait++;                               // wait for port activation
-    GPIO_DIR_PORTA |= 0xF0;               // make PA4-7 outputs
-    GPIO_AFSEL_PORTA &= ~0xFF;            // disable alternate functions 
-    GPIO_DEN_PORTA |= 0xF0;               // enable digital I/O on PA4-7
-    
+    GPIO_PORTA_DIR_R |= 0xF0;             // make PA4-7 outputs
+    GPIO_PORTA_AFSEL_R &= ~(0xF0);        // disable alternate functions
+    GPIO_PORTA_DEN_R |= 0xF0;             // enable digital I/O on PA4-7
 
     for (wait = 0; wait < 500; wait++) {}
 }
@@ -1424,12 +1391,4 @@ long Touch_GetCoords(void){
 void GPIOPortA_Handler(void){
   GPIO_PORTA_ICR_R = 0x08;      // acknowledge flag4
 //  Touched = 1;
-}
-
-int main() {
-  LCD_Init();
-  while(1) {
-    LCD_ColorFill(Color4[2]);
-  }
-  return 0;
 }
